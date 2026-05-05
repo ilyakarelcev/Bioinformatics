@@ -1,0 +1,1 @@
+FAISS = Facebook AI Similarity Search. Это библиотека от Meta/FAIR для быстрого поиска ближайших dense vectors.
