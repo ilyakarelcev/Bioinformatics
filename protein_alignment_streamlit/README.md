@@ -11,8 +11,29 @@ Streamlit app for comparing two amino-acid sequences with pairwise alignment.
 - Tile-based visual alignment viewer with match/similarity/gap highlighting.
 - Optional residue coloring by biochemical class.
 - Downloadable text report.
+- Dark theme by default, with a Light/Dark switch in the sidebar.
 
 ## Run
+
+Double-click the launcher in the parent folder:
+
+```text
+C:\Users\53k\Desktop\BioSeq\run_alignment_app.bat
+```
+
+Then open:
+
+```text
+http://localhost:8502
+```
+
+If dependencies are missing, double-click first:
+
+```text
+C:\Users\53k\Desktop\BioSeq\install_alignment_app_requirements.bat
+```
+
+Manual launch:
 
 ```powershell
 cd C:\Users\53k\Desktop\BioSeq\protein_alignment_streamlit

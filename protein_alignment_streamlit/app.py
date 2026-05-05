@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import html
+import json
 import re
 import textwrap
+import warnings
 from dataclasses import dataclass
 from typing import Iterable
 
 import streamlit as st
 import streamlit.components.v1 as components
+
+warnings.filterwarnings("ignore", message="Bio.pairwise2 has been deprecated*")
 
 try:
     from Bio import BiopythonDeprecationWarning, pairwise2
@@ -16,8 +20,6 @@ except Exception:  # pragma: no cover - handled in the UI
     pairwise2 = None
     substitution_matrices = None
     BiopythonDeprecationWarning = None
-
-import warnings
 
 if BiopythonDeprecationWarning is not None:
     warnings.filterwarnings("ignore", category=BiopythonDeprecationWarning)
@@ -76,15 +78,42 @@ AA_CLASS = {
     "Z": "ambiguous",
     "X": "ambiguous",
 }
+AA_NAMES = {
+    "A": "Alanine",
+    "R": "Arginine",
+    "N": "Asparagine",
+    "D": "Aspartic acid",
+    "C": "Cysteine",
+    "Q": "Glutamine",
+    "E": "Glutamic acid",
+    "G": "Glycine",
+    "H": "Histidine",
+    "I": "Isoleucine",
+    "L": "Leucine",
+    "K": "Lysine",
+    "M": "Methionine",
+    "F": "Phenylalanine",
+    "P": "Proline",
+    "S": "Serine",
+    "T": "Threonine",
+    "W": "Tryptophan",
+    "Y": "Tyrosine",
+    "V": "Valine",
+    "B": "Asparagine or aspartic acid",
+    "Z": "Glutamine or glutamic acid",
+    "X": "Unknown amino acid",
+    "-": "Gap",
+}
 
 EXAMPLE_FULL = (
-    ">human_preproinsulin\n"
+    ">sp|P01308|INS_HUMAN Insulin OS=Homo sapiens OX=9606 GN=INS PE=1 SV=1\n"
     "MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAED"
     "LQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN"
 )
 EXAMPLE_FRAGMENT = (
-    ">insulin_b_chain_like_fragment\n"
-    "FVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGG"
+    ">sp|P01315|INS_PIG Insulin OS=Sus scrofa OX=9823 GN=INS PE=1 SV=2\n"
+    "MALWTRLLPLLALLALWAPAPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREAEN"
+    "PQAGAVELGGGLGGLQALALEGPPQKRGIVEQCCTSICSLYQLENYCN"
 )
 
 
@@ -446,6 +475,19 @@ def connector_symbol(matrix, aa1: str, aa2: str) -> str:
     return ""
 
 
+def connector_explanation(matrix, aa1: str, aa2: str) -> tuple[str, str]:
+    if aa1 == "-" or aa2 == "-":
+        return "Gap", "One sequence has an insertion/deletion here."
+    if aa1 == aa2:
+        return "Exact match", "`|` means the same amino acid in both sequences."
+    score = matrix_score(matrix, aa1, aa2)
+    if score > 0:
+        return "Conservative substitution", "`:` means BLOSUM62 scores this replacement as favorable."
+    if score == 0:
+        return "Weak similarity", "`.` means neutral/weak similarity in BLOSUM62."
+    return "Mismatch", "No symbol means an unfavorable substitution."
+
+
 def residue_class(aa: str, other: str, color_mode: str, matrix) -> str:
     if aa == "-":
         return "gap"
@@ -480,13 +522,93 @@ def chunk_ranges(length: int, size: int) -> Iterable[range]:
         yield range(start, min(start + size, length))
 
 
-def build_alignment_html(result: AlignmentResult, color_mode: str, wrap: int) -> str:
+def build_overview_html(result: AlignmentResult) -> str:
+    matrix = load_blosum62()
+    cells: list[str] = []
+    for idx, (aa1, aa2) in enumerate(zip(result.aligned_seq1, result.aligned_seq2), start=1):
+        if aa1 == "-" or aa2 == "-":
+            class_name = "gap"
+        elif aa1 == aa2:
+            class_name = "exact"
+        elif matrix_score(matrix, aa1, aa2) > 0:
+            class_name = "positive-match"
+        elif matrix_score(matrix, aa1, aa2) == 0:
+            class_name = "weak-match"
+        else:
+            class_name = "mismatch"
+        cells.append(f'<span class="overview-cell {class_name}" title="Column {idx}: {aa1}/{aa2}"></span>')
+
+    return f"""
+    <style>
+      body {{
+        margin: 0;
+        font-family: Inter, Segoe UI, Arial, sans-serif;
+        background: transparent;
+      }}
+      .overview {{
+        border: 1px solid #d9dee8;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 12px;
+      }}
+      .overview-labels {{
+        display: flex;
+        justify-content: space-between;
+        color: #687289;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }}
+      .overview-track {{
+        display: grid;
+        grid-template-columns: repeat({len(cells)}, minmax(2px, 1fr));
+        gap: 1px;
+        min-width: 100%;
+        height: 34px;
+        overflow: hidden;
+        border-radius: 6px;
+        border: 1px solid #edf0f5;
+        background: #f5f7fb;
+      }}
+      .overview-cell {{
+        min-width: 2px;
+        height: 100%;
+      }}
+      .exact {{ background: #10b981; }}
+      .positive-match {{ background: #8bd3ff; }}
+      .weak-match {{ background: #ffe08a; }}
+      .mismatch {{ background: #d4dae5; }}
+      .gap {{ background: #ff9f9f; }}
+    </style>
+    <div class="overview">
+      <div class="overview-labels">
+        <span>1</span>
+        <span>Alignment overview: {len(cells)} columns</span>
+        <span>{len(cells)}</span>
+      </div>
+      <div class="overview-track">{''.join(cells)}</div>
+    </div>
+    """
+
+
+def build_alignment_html(
+    result: AlignmentResult,
+    color_mode: str,
+    wrap: int,
+    start_column: int = 1,
+    end_column: int | None = None,
+) -> str:
     matrix = load_blosum62()
     labels_1 = position_labels(result.aligned_seq1)
     labels_2 = position_labels(result.aligned_seq2)
     chunks: list[str] = []
+    alignment_length = len(result.aligned_seq1)
+    start_index = max(0, start_column - 1)
+    end_index = alignment_length if end_column is None else min(alignment_length, end_column)
+    selected_length = max(0, end_index - start_index)
 
-    for indexes in chunk_ranges(len(result.aligned_seq1), wrap):
+    for local_indexes in chunk_ranges(selected_length, wrap):
+        indexes = range(start_index + local_indexes.start, start_index + local_indexes.stop)
         cols = len(indexes)
         row_top: list[str] = []
         row_a: list[str] = []
@@ -542,6 +664,7 @@ def build_alignment_html(result: AlignmentResult, color_mode: str, wrap: int) ->
         border: 1px solid #d9dee8;
         background: #ffffff;
         border-radius: 8px;
+        overflow-x: auto;
       }}
       .legend {{
         display: flex;
@@ -652,6 +775,648 @@ def build_alignment_html(result: AlignmentResult, color_mode: str, wrap: int) ->
     """
 
 
+def build_interactive_alignment_html(result: AlignmentResult, color_mode: str, app_theme: str) -> str:
+    matrix = load_blosum62()
+    seq1_position = 0
+    seq2_position = 0
+    columns: list[dict[str, str | int]] = []
+
+    for idx, (aa1, aa2) in enumerate(zip(result.aligned_seq1, result.aligned_seq2), start=1):
+        if aa1 != "-":
+            seq1_position += 1
+        if aa2 != "-":
+            seq2_position += 1
+
+        symbol = connector_symbol(matrix, aa1, aa2)
+        relation_title, relation_detail = connector_explanation(matrix, aa1, aa2)
+        columns.append(
+            {
+                "column": idx,
+                "aa1": aa1,
+                "aa2": aa2,
+                "aa1Name": AA_NAMES.get(aa1, "Unknown residue"),
+                "aa2Name": AA_NAMES.get(aa2, "Unknown residue"),
+                "relationTitle": relation_title,
+                "relationDetail": relation_detail,
+                "seq1Pos": seq1_position if aa1 != "-" else "",
+                "seq2Pos": seq2_position if aa2 != "-" else "",
+                "symbol": symbol,
+                "overviewClass": residue_class(aa1, aa2, "By alignment result", matrix),
+                "class1": residue_class(aa1, aa2, color_mode, matrix),
+                "class2": residue_class(aa2, aa1, color_mode, matrix),
+            }
+        )
+
+    payload = json.dumps(
+        {
+            "seq1Name": result.seq1_name,
+            "seq2Name": result.seq2_name,
+            "columns": columns,
+        }
+    )
+    is_dark = app_theme == "Dark"
+    viewer_colors = {
+        "page_bg": "#080814" if is_dark else "#ffffff",
+        "panel_bg": "#111122" if is_dark else "#ffffff",
+        "panel_border": "#2c2a4a" if is_dark else "#d0d7de",
+        "text": "#f4f2ff" if is_dark else "#24292f",
+        "muted": "#a8a2cf" if is_dark else "#57606a",
+        "soft_border": "#282747" if is_dark else "#d8dee4",
+        "scale": "#8f89c6" if is_dark else "#57606a",
+        "tick": "#d7d2ff" if is_dark else "#24292f",
+        "track_bg": "#0b0b19" if is_dark else "#f6f8fa",
+        "track_border": "#302d55" if is_dark else "#d0d7de",
+        "viewport_bg": "rgba(124, 92, 255, 0.20)" if is_dark else "rgba(31, 136, 61, 0.14)",
+        "viewport_border": "rgba(164, 143, 255, 0.88)" if is_dark else "rgba(31, 136, 61, 0.66)",
+        "handle_bg": "rgba(20, 18, 42, 0.94)" if is_dark else "rgba(255, 255, 255, 0.9)",
+        "position": "#a8a2cf" if is_dark else "#57606a",
+        "connector": "#d7d2ff" if is_dark else "#57606a",
+        "hover": "#7c5cff" if is_dark else "#0969da",
+        "paired": "#2dd4bf" if is_dark else "#9a6700",
+    }
+    tile_colors = {
+        "exact_bg": "#7c5cff" if is_dark else "#34d058",
+        "exact_fg": "#f8f6ff" if is_dark else "#052e16",
+        "positive_bg": "#2dd4bf" if is_dark else "#8be9df",
+        "positive_fg": "#041f20" if is_dark else "#063b3b",
+        "weak_bg": "#f0abfc" if is_dark else "#ffd33d",
+        "weak_fg": "#321044" if is_dark else "#3b2300",
+        "mismatch_bg": "#26243d" if is_dark else "#eaeef2",
+        "mismatch_fg": "#d8d3ff" if is_dark else "#24292f",
+        "gap_bg": "#fb7185" if is_dark else "#ffebe9",
+        "gap_fg": "#2b0710" if is_dark else "#82071e",
+        "hydrophobic_bg": "#575174" if is_dark else "#d8dee4",
+        "hydrophobic_fg": "#f2efff" if is_dark else "#24292f",
+        "polar_bg": "#38bdf8" if is_dark else "#a5d6a7",
+        "polar_fg": "#061b2b" if is_dark else "#143d1a",
+        "positive_charge_bg": "#818cf8" if is_dark else "#79c0ff",
+        "positive_charge_fg": "#101342" if is_dark else "#05264c",
+        "negative_bg": "#f472b6" if is_dark else "#ffaba8",
+        "negative_fg": "#331023" if is_dark else "#5f0f0b",
+        "aromatic_bg": "#c084fc" if is_dark else "#d2a8ff",
+        "aromatic_fg": "#25103f" if is_dark else "#3b0f70",
+        "special_bg": "#fbbf24" if is_dark else "#ffdf8b",
+        "special_fg": "#2e1b00" if is_dark else "#442900",
+        "ambiguous_bg": "#4b4868" if is_dark else "#d0d7de",
+        "ambiguous_fg": "#ebe7ff" if is_dark else "#24292f",
+    }
+
+    return f"""
+    <style>
+      body {{
+        margin: 0;
+        font-family: Inter, Segoe UI, Arial, sans-serif;
+        background: {viewer_colors["page_bg"]};
+        color: {viewer_colors["text"]};
+      }}
+      .alignment-browser {{
+        border: 1px solid {viewer_colors["panel_border"]};
+        border-radius: 8px;
+        padding: 14px;
+        background: {viewer_colors["panel_bg"]};
+        box-sizing: border-box;
+        user-select: none;
+      }}
+      .browser-head {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+        color: {viewer_colors["muted"]};
+        font-size: 12px;
+        font-weight: 700;
+      }}
+      .overview {{
+        position: relative;
+        height: 68px;
+        padding: 0 0 14px;
+      }}
+      .scale-line {{
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 10px;
+        height: 1px;
+        background: {viewer_colors["scale"]};
+      }}
+      .tick {{
+        position: absolute;
+        top: 10px;
+        width: 1px;
+        height: 10px;
+        background: {viewer_colors["scale"]};
+      }}
+      .tick span {{
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+        color: {viewer_colors["tick"]};
+        white-space: nowrap;
+      }}
+      .track {{
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 28px;
+        display: grid;
+        grid-template-columns: repeat(var(--cols), minmax(1px, 1fr));
+        overflow: hidden;
+        background: {viewer_colors["track_bg"]};
+        border: 1px solid {viewer_colors["track_border"]};
+        border-radius: 3px;
+      }}
+      .overview-cell {{
+        min-width: 1px;
+        height: 100%;
+      }}
+      .viewport {{
+        position: absolute;
+        top: 10px;
+        bottom: 0;
+        background: {viewer_colors["viewport_bg"]};
+        border: 1px solid {viewer_colors["viewport_border"]};
+        cursor: grab;
+        box-sizing: border-box;
+        z-index: 4;
+      }}
+      .viewport:active {{
+        cursor: grabbing;
+      }}
+      .handle {{
+        position: absolute;
+        top: -2px;
+        bottom: -2px;
+        width: 8px;
+        background: {viewer_colors["handle_bg"]};
+        border: 1px solid {viewer_colors["viewport_border"]};
+        box-sizing: border-box;
+        cursor: ew-resize;
+      }}
+      .handle.left {{
+        left: -5px;
+      }}
+      .handle.right {{
+        right: -5px;
+      }}
+      .range-readout {{
+        margin: 10px 0 8px;
+        color: {viewer_colors["muted"]};
+        font-size: 12px;
+        font-weight: 700;
+      }}
+      .detail {{
+        border-top: 1px solid {viewer_colors["soft_border"]};
+        padding-top: 10px;
+      }}
+      .lane {{
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
+      }}
+      .lane-inner {{
+        display: grid;
+        grid-template-columns: repeat(var(--cols), var(--tile-width));
+        gap: var(--tile-gap);
+        width: max-content;
+        transform: translateX(var(--offset-x));
+        will-change: transform;
+      }}
+      .detail-scale {{
+        height: 16px;
+        margin-bottom: 3px;
+      }}
+      .detail-pos {{
+        text-align: center;
+        color: {viewer_colors["position"]};
+        font-size: 9px;
+        font-family: Consolas, Menlo, monospace;
+        overflow: hidden;
+        white-space: nowrap;
+      }}
+      .tile {{
+        position: relative;
+        height: 28px;
+        width: var(--tile-width);
+        min-width: var(--tile-width);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        border: 1px solid rgba(23, 32, 51, 0.09);
+        box-sizing: border-box;
+        font-family: Consolas, Menlo, monospace;
+        font-size: var(--tile-font-size);
+        font-weight: 800;
+        overflow: hidden;
+        white-space: nowrap;
+      }}
+      .tile.is-hovered {{
+        outline: 2px solid #f8fafc;
+        outline-offset: -2px;
+        box-shadow: 0 0 0 2px {viewer_colors["hover"]}, 0 0 18px rgba(88, 166, 255, 0.35);
+        z-index: 3;
+      }}
+      .tile.is-paired {{
+        outline: 2px solid {viewer_colors["paired"]};
+        outline-offset: -2px;
+        box-shadow: 0 0 0 2px rgba(210, 153, 34, 0.55);
+        z-index: 2;
+      }}
+      .connector-row {{
+        height: 22px;
+        align-items: center;
+      }}
+      .connector {{
+        min-width: 0;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }}
+      .connector.is-paired {{
+        background: rgba(250, 204, 21, 0.12);
+      }}
+      .connector-mark {{
+        display: block;
+        flex: 0 0 auto;
+      }}
+      .connector-mark.exact-line {{
+        width: 2px;
+        height: 18px;
+        border-radius: 999px;
+        background: {viewer_colors["connector"]};
+      }}
+      .connector-mark.positive-dots {{
+        position: relative;
+        width: 6px;
+        height: 18px;
+      }}
+      .connector-mark.positive-dots::before,
+      .connector-mark.positive-dots::after {{
+        content: "";
+        position: absolute;
+        left: 50%;
+        width: 4px;
+        height: 4px;
+        border-radius: 999px;
+        background: {viewer_colors["connector"]};
+        transform: translateX(-50%);
+      }}
+      .connector-mark.positive-dots::before {{
+        top: 4px;
+      }}
+      .connector-mark.positive-dots::after {{
+        bottom: 4px;
+      }}
+      .connector-mark.weak-dot {{
+        width: 4px;
+        height: 4px;
+        border-radius: 999px;
+        background: {viewer_colors["connector"]};
+      }}
+      .compact .tile span {{
+        transform: scale(0.78);
+      }}
+      .hide-residue-letters .tile span {{
+        opacity: 0;
+      }}
+      .micro .tile {{
+        height: 22px;
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+      }}
+      .name-row {{
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 8px;
+        align-items: center;
+        margin: 3px 0;
+      }}
+      .seq-name {{
+        color: {viewer_colors["muted"]};
+        font-size: 12px;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }}
+      .tooltip {{
+        position: fixed;
+        z-index: 30;
+        display: none;
+        max-width: 260px;
+        padding: 9px 10px;
+        border-radius: 7px;
+        background: rgba(17, 24, 39, 0.96);
+        color: #ffffff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+        font-size: 12px;
+        line-height: 1.35;
+        pointer-events: none;
+      }}
+      .tooltip strong {{
+        display: block;
+        margin-bottom: 2px;
+        font-size: 13px;
+      }}
+      .tooltip span {{
+        color: #cbd5e1;
+      }}
+      .exact {{ background: {tile_colors["exact_bg"]}; color: {tile_colors["exact_fg"]}; }}
+      .positive-match {{ background: {tile_colors["positive_bg"]}; color: {tile_colors["positive_fg"]}; }}
+      .weak-match {{ background: {tile_colors["weak_bg"]}; color: {tile_colors["weak_fg"]}; }}
+      .mismatch {{ background: {tile_colors["mismatch_bg"]}; color: {tile_colors["mismatch_fg"]}; }}
+      .gap, .gap-neighbor {{ background: {tile_colors["gap_bg"]}; color: {tile_colors["gap_fg"]}; }}
+      .hydrophobic {{ background: {tile_colors["hydrophobic_bg"]}; color: {tile_colors["hydrophobic_fg"]}; }}
+      .polar {{ background: {tile_colors["polar_bg"]}; color: {tile_colors["polar_fg"]}; }}
+      .positive {{ background: {tile_colors["positive_charge_bg"]}; color: {tile_colors["positive_charge_fg"]}; }}
+      .negative {{ background: {tile_colors["negative_bg"]}; color: {tile_colors["negative_fg"]}; }}
+      .aromatic {{ background: {tile_colors["aromatic_bg"]}; color: {tile_colors["aromatic_fg"]}; }}
+      .special {{ background: {tile_colors["special_bg"]}; color: {tile_colors["special_fg"]}; }}
+      .ambiguous {{ background: {tile_colors["ambiguous_bg"]}; color: {tile_colors["ambiguous_fg"]}; }}
+    </style>
+
+    <div class="alignment-browser" id="browser">
+      <div class="browser-head">
+        <span id="leftLabel"></span>
+        <span id="rightLabel"></span>
+      </div>
+      <div class="overview" id="overview">
+        <div class="scale-line"></div>
+        <div id="ticks"></div>
+        <div class="track" id="track"></div>
+        <div class="viewport" id="viewport">
+          <span class="handle left" data-mode="left"></span>
+          <span class="handle right" data-mode="right"></span>
+        </div>
+      </div>
+      <div class="range-readout" id="readout"></div>
+      <div class="detail" id="detail">
+        <div class="name-row">
+          <div class="seq-name"></div>
+          <div class="lane detail-scale"><div class="lane-inner" id="detailScale"></div></div>
+        </div>
+        <div class="name-row">
+          <div class="seq-name" id="seq1Name"></div>
+          <div class="lane tile-row"><div class="lane-inner" id="row1"></div></div>
+        </div>
+        <div class="name-row">
+          <div class="seq-name"></div>
+          <div class="lane connector-row"><div class="lane-inner" id="connectors"></div></div>
+        </div>
+        <div class="name-row">
+          <div class="seq-name" id="seq2Name"></div>
+          <div class="lane tile-row"><div class="lane-inner" id="row2"></div></div>
+        </div>
+      </div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <script>
+      const payload = {payload};
+      const columns = payload.columns;
+      const total = columns.length;
+      const browser = document.getElementById("browser");
+      const overview = document.getElementById("overview");
+      const track = document.getElementById("track");
+      const viewport = document.getElementById("viewport");
+      const ticks = document.getElementById("ticks");
+      const readout = document.getElementById("readout");
+      const detail = document.getElementById("detail");
+      const detailScale = document.getElementById("detailScale");
+      const row1 = document.getElementById("row1");
+      const row2 = document.getElementById("row2");
+      const connectors = document.getElementById("connectors");
+      const seq1Name = document.getElementById("seq1Name");
+      const seq2Name = document.getElementById("seq2Name");
+      const leftLabel = document.getElementById("leftLabel");
+      const rightLabel = document.getElementById("rightLabel");
+      const tooltip = document.getElementById("tooltip");
+
+      seq1Name.textContent = payload.seq1Name;
+      seq2Name.textContent = payload.seq2Name;
+      leftLabel.textContent = "1";
+      rightLabel.textContent = String(total);
+
+      const initialSize = total <= 160 ? total : Math.min(120, total);
+      let start = 0.0;
+      let end = initialSize;
+      let drag = null;
+      const minCols = Math.min(8, total);
+
+      function escapeHtml(value) {{
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }}
+
+      function chooseTickStep(n) {{
+        if (n <= 120) return 10;
+        if (n <= 400) return 25;
+        if (n <= 1000) return 50;
+        if (n <= 3000) return 100;
+        return 500;
+      }}
+
+      function columnFromClientX(clientX) {{
+        const rect = overview.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+        return ratio * total;
+      }}
+
+      function clampRange() {{
+        start = Math.max(0, Math.min(start, total - minCols));
+        end = Math.max(start + minCols, Math.min(end, total));
+      }}
+
+      function updateViewport() {{
+        clampRange();
+        viewport.style.left = (start / total * 100) + "%";
+        viewport.style.width = ((end - start) / total * 100) + "%";
+        readout.textContent = `Columns ${{Math.floor(start) + 1}}-${{Math.ceil(end)}} of ${{total}}`;
+      }}
+
+      function tileHtml(col, aaKey, classKey, posKey, otherKey) {{
+        const aa = col[aaKey];
+        const other = col[otherKey];
+        const nameKey = aaKey === "aa1" ? "aa1Name" : "aa2Name";
+        const otherNameKey = aaKey === "aa1" ? "aa2Name" : "aa1Name";
+        return `<div class="tile ${{col[classKey]}}"
+          data-index="${{col.column - 1}}"
+          data-aa="${{escapeHtml(aa)}}"
+          data-name="${{escapeHtml(col[nameKey])}}"
+          data-other-name="${{escapeHtml(col[otherNameKey])}}"
+          data-symbol="${{escapeHtml(col.symbol || "none")}}"
+          data-relation-title="${{escapeHtml(col.relationTitle)}}"
+          data-relation-detail="${{escapeHtml(col.relationDetail)}}"
+          data-position="${{escapeHtml(col[posKey] || "gap")}}"
+          data-column="${{col.column}}"
+          data-other="${{escapeHtml(other)}}"><span>${{escapeHtml(aa)}}</span></div>`;
+      }}
+
+      function connectorHtml(col) {{
+        let mark = "";
+        if (col.symbol === "|") mark = '<span class="connector-mark exact-line"></span>';
+        else if (col.symbol === ":") mark = '<span class="connector-mark positive-dots"></span>';
+        else if (col.symbol === ".") mark = '<span class="connector-mark weak-dot"></span>';
+        return `<div class="connector" data-index="${{col.column - 1}}">${{mark}}</div>`;
+      }}
+
+      function renderDetail() {{
+        const visibleSpan = Math.max(minCols, end - start);
+        const laneWidth = Math.max(1, row1.parentElement.getBoundingClientRect().width);
+        let roughTileWidth = laneWidth / visibleSpan;
+        let gap = roughTileWidth < 8 ? 0 : 2;
+        let tileWidth = (laneWidth - gap * Math.max(0, visibleSpan - 1)) / visibleSpan;
+        if (tileWidth < 1) {{
+          gap = 0;
+          tileWidth = laneWidth / visibleSpan;
+        }}
+        const offset = -(start * (tileWidth + gap));
+        detail.style.setProperty("--cols", total);
+        detail.style.setProperty("--tile-width", tileWidth + "px");
+        detail.style.setProperty("--tile-gap", gap + "px");
+        detail.style.setProperty("--offset-x", offset + "px");
+        detail.style.setProperty("--tile-font-size", Math.max(7, Math.min(13, tileWidth * 0.82)) + "px");
+        detail.style.setProperty("--connector-font-size", Math.max(7, Math.min(12, tileWidth * 0.9)) + "px");
+        detail.classList.toggle("compact", tileWidth < 10);
+        detail.classList.toggle("hide-residue-letters", tileWidth < 6);
+        detail.classList.toggle("micro", tileWidth < 5);
+
+        detailScale.innerHTML = columns.map((col) => {{
+          const step = tileWidth >= 18 ? 5 : tileWidth >= 9 ? 10 : tileWidth >= 4 ? 20 : 50;
+          const show = col.column === 1 || col.column === total || col.column % step === 0 || visibleSpan <= 35;
+          return `<div class="detail-pos">${{show ? col.column : ""}}</div>`;
+        }}).join("");
+        row1.innerHTML = columns.map((col) => tileHtml(col, "aa1", "class1", "seq1Pos", "aa2")).join("");
+        connectors.innerHTML = columns.map((col) => connectorHtml(col)).join("");
+        row2.innerHTML = columns.map((col) => tileHtml(col, "aa2", "class2", "seq2Pos", "aa1")).join("");
+      }}
+
+      function renderOverview() {{
+        track.style.setProperty("--cols", total);
+        track.innerHTML = columns.map((col) => `<span class="overview-cell ${{col.overviewClass}}"></span>`).join("");
+        const step = chooseTickStep(total);
+        const tickValues = [1];
+        for (let value = step; value < total; value += step) tickValues.push(value);
+        if (!tickValues.includes(total)) tickValues.push(total);
+        ticks.innerHTML = tickValues.map((value) => {{
+          const left = total === 1 ? 0 : ((value - 1) / (total - 1) * 100);
+          return `<div class="tick" style="left:${{left}}%"><span>${{value}}</span></div>`;
+        }}).join("");
+      }}
+
+      function rerender() {{
+        updateViewport();
+        renderDetail();
+      }}
+
+      viewport.addEventListener("pointerdown", (event) => {{
+        event.preventDefault();
+        viewport.setPointerCapture(event.pointerId);
+        const mode = event.target.dataset.mode || "move";
+        drag = {{
+          mode,
+          x: event.clientX,
+          start,
+          end,
+        }};
+      }});
+
+      viewport.addEventListener("pointermove", (event) => {{
+        if (!drag) return;
+        const deltaCols = columnFromClientX(event.clientX) - columnFromClientX(drag.x);
+        if (drag.mode === "left") {{
+          start = Math.min(drag.end - minCols, Math.max(0, drag.start + deltaCols));
+          end = drag.end;
+        }} else if (drag.mode === "right") {{
+          start = drag.start;
+          end = Math.max(drag.start + minCols, Math.min(total, drag.end + deltaCols));
+        }} else {{
+          const width = drag.end - drag.start;
+          start = Math.max(0, Math.min(total - width, drag.start + deltaCols));
+          end = start + width;
+        }}
+        rerender();
+      }});
+
+      viewport.addEventListener("pointerup", () => {{
+        drag = null;
+      }});
+
+      overview.addEventListener("pointerdown", (event) => {{
+        if (event.target === viewport || event.target.classList.contains("handle")) return;
+        const width = end - start;
+        const center = columnFromClientX(event.clientX);
+        start = Math.max(0, Math.min(total - width, center - width / 2));
+        end = start + width;
+        rerender();
+      }});
+
+      window.addEventListener("resize", renderDetail);
+      function clearHighlight() {{
+        detail.querySelectorAll(".is-hovered, .is-paired").forEach((node) => {{
+          node.classList.remove("is-hovered", "is-paired");
+        }});
+      }}
+
+      function highlightColumn(tile) {{
+        clearHighlight();
+        const index = Number(tile.dataset.index);
+        const first = row1.children[index];
+        const second = row2.children[index];
+        const link = connectors.children[index];
+        tile.classList.add("is-hovered");
+        if (first && first !== tile) first.classList.add("is-paired");
+        if (second && second !== tile) second.classList.add("is-paired");
+        if (link) link.classList.add("is-paired");
+      }}
+
+      detail.addEventListener("pointerover", (event) => {{
+        const tile = event.target.closest(".tile");
+        if (!tile) return;
+        highlightColumn(tile);
+        tooltip.innerHTML = `<strong>${{tile.dataset.aa}} - ${{tile.dataset.name}}</strong>
+          <span>${{tile.dataset.sequence}}</span><br>
+          Position: ${{tile.dataset.position}} · Alignment column: ${{tile.dataset.column}}<br>
+          Compared with: ${{tile.dataset.other}}`;
+        tooltip.innerHTML = `<strong>${{tile.dataset.aa}} - ${{tile.dataset.name}}</strong>
+          <span>Position ${{tile.dataset.position}} · column ${{tile.dataset.column}}</span><br>
+          Compared with: ${{tile.dataset.other}} - ${{tile.dataset.otherName}}<br>
+          Symbol: ${{tile.dataset.symbol}} · ${{tile.dataset.relationTitle}}<br>
+          <span>${{tile.dataset.relationDetail}}</span>`;
+        tooltip.style.display = "block";
+      }});
+      detail.addEventListener("pointermove", (event) => {{
+        if (tooltip.style.display !== "block") return;
+        const padding = 12;
+        const rect = tooltip.getBoundingClientRect();
+        let left = event.clientX - rect.width / 2;
+        let top = event.clientY - rect.height - 14;
+        left = Math.max(padding, Math.min(window.innerWidth - rect.width - padding, left));
+        if (top < padding) top = event.clientY + 16;
+        tooltip.style.left = left + "px";
+        tooltip.style.top = top + "px";
+      }});
+      detail.addEventListener("pointerleave", () => {{
+        clearHighlight();
+        tooltip.style.display = "none";
+      }});
+      renderOverview();
+      rerender();
+    </script>
+    """
+
+
 def interpret(result: AlignmentResult, metrics: AlignmentMetrics) -> list[str]:
     notes: list[str] = []
     if result.algorithm == "Smith-Waterman":
@@ -729,28 +1494,137 @@ def make_report(result: AlignmentResult, metrics: AlignmentMetrics, notes: list[
     )
 
 
-def inject_page_css() -> None:
+def inject_page_css(app_theme: str) -> None:
+    is_dark = app_theme == "Dark"
+    colors = {
+        "app_bg": (
+            "radial-gradient(circle at 18% -8%, rgba(124, 92, 255, 0.22) 0%, rgba(8, 8, 20, 0) 38%), linear-gradient(180deg, #080814 0%, #05050d 100%)"
+            if is_dark
+            else "linear-gradient(180deg, #f6f8fa 0%, #ffffff 42%)"
+        ),
+        "panel_bg": "#111122" if is_dark else "#ffffff",
+        "panel_bg_soft": "#0b0b19" if is_dark else "#f6f8fa",
+        "panel_border": "#2c2a4a" if is_dark else "#d0d7de",
+        "metric_label": "#a8a2cf" if is_dark else "#57606a",
+        "metric_value": "#f4f2ff" if is_dark else "#24292f",
+        "text": "#f4f2ff" if is_dark else "#24292f",
+        "muted": "#a8a2cf" if is_dark else "#57606a",
+        "textarea_bg": "#0b0b19" if is_dark else "#ffffff",
+        "textarea_border": "#343056" if is_dark else "#8c959f",
+        "textarea_focus": "#8b5cf6" if is_dark else "#1f883d",
+        "button_bg": "#7c5cff" if is_dark else "#1f883d",
+        "button_hover": "#8b7cff" if is_dark else "#1a7f37",
+        "button_text": "#ffffff",
+        "tab_active": "#a78bfa" if is_dark else "#1f883d",
+        "code_bg": "#0b0b19" if is_dark else "#f6f8fa",
+    }
     st.markdown(
-        """
+        f"""
         <style>
-          .stApp {
-            background:
-              linear-gradient(180deg, #f6f8fb 0%, #ffffff 34%);
-          }
-          [data-testid="stMetric"] {
-            background: #ffffff;
-            border: 1px solid #dde3ee;
+          .stApp {{
+            background: {colors["app_bg"]};
+            color: {colors["text"]};
+          }}
+          .stApp, .stApp p, .stApp span, .stApp label {{
+            color: {colors["text"]};
+          }}
+          .stCaptionContainer, .stCaptionContainer p, small {{
+            color: {colors["muted"]} !important;
+          }}
+          [data-testid="stMetric"] {{
+            background: {colors["panel_bg"]};
+            border: 1px solid {colors["panel_border"]};
             border-radius: 8px;
             padding: 12px 14px;
-          }
-          [data-testid="stMetricLabel"] {
-            color: #5d6880;
-          }
-          div[data-testid="stForm"] {
-            border: 1px solid #dde3ee;
+          }}
+          [data-testid="stMetricLabel"] {{
+            color: {colors["metric_label"]};
+          }}
+          [data-testid="stMetricValue"] {{
+            color: {colors["metric_value"]};
+          }}
+          [data-testid="stMetricDelta"] {{
+            color: {colors["muted"]};
+          }}
+          [data-testid="stWidgetLabel"],
+          [data-testid="stWidgetLabel"] p,
+          [data-testid="stTextArea"] label,
+          [data-testid="stTextArea"] label p {{
+            color: {colors["text"]} !important;
+            font-weight: 650;
+          }}
+          textarea {{
+            background: {colors["textarea_bg"]} !important;
+            border-color: {colors["textarea_border"]} !important;
+            color: {colors["text"]} !important;
+            caret-color: {colors["textarea_focus"]} !important;
+          }}
+          textarea:focus {{
+            border-color: {colors["textarea_focus"]} !important;
+            box-shadow: 0 0 0 1px {colors["textarea_focus"]} !important;
+          }}
+          input, div[data-baseweb="input"] input {{
+            color: {colors["text"]} !important;
+          }}
+          div[data-baseweb="input"] {{
+            background: {colors["textarea_bg"]} !important;
+            border-color: {colors["textarea_border"]} !important;
+          }}
+          .stButton > button,
+          .stDownloadButton > button {{
             border-radius: 8px;
-            background: #ffffff;
-          }
+            border: 1px solid {colors["panel_border"]};
+            color: {colors["text"]};
+            background: {colors["panel_bg"]};
+          }}
+          .stButton > button[kind="primary"],
+          .stButton > button[data-testid="baseButton-primary"] {{
+            background: {colors["button_bg"]} !important;
+            border-color: {colors["button_bg"]} !important;
+            color: {colors["button_text"]} !important;
+          }}
+          .stButton > button[kind="primary"]:hover,
+          .stButton > button[data-testid="baseButton-primary"]:hover {{
+            background: {colors["button_hover"]} !important;
+            border-color: {colors["button_hover"]} !important;
+            color: {colors["button_text"]} !important;
+          }}
+          .stButton > button:disabled {{
+            opacity: 0.55;
+            color: {colors["muted"]} !important;
+            background: {colors["panel_bg_soft"]} !important;
+          }}
+          div[data-testid="stExpander"], div[data-testid="stAlert"] {{
+            border-color: {colors["panel_border"]};
+          }}
+          div[data-testid="stTabs"] [role="tablist"] {{
+            border-bottom-color: {colors["panel_border"]};
+          }}
+          div[data-testid="stTabs"] button[role="tab"] p {{
+            color: {colors["muted"]} !important;
+          }}
+          div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {{
+            color: {colors["tab_active"]} !important;
+          }}
+          div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {{
+            background-color: {colors["tab_active"]} !important;
+          }}
+          section[data-testid="stSidebar"] {{
+            border-right: 1px solid {colors["panel_border"]};
+            background: {colors["panel_bg"]};
+          }}
+          div[data-testid="stForm"] {{
+            border: 1px solid {colors["panel_border"]};
+            border-radius: 8px;
+            background: {colors["panel_bg"]};
+          }}
+          code, pre {{
+            background: {colors["code_bg"]} !important;
+            color: {colors["text"]} !important;
+          }}
+          div[data-testid="stMarkdownContainer"] {{
+            color: {colors["text"]};
+          }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -759,7 +1633,12 @@ def inject_page_css() -> None:
 
 def main() -> None:
     st.set_page_config(page_title=APP_TITLE, page_icon="AA", layout="wide")
-    inject_page_css()
+
+    with st.sidebar:
+        app_theme = st.radio("Theme", ["Dark", "Light"], index=0, horizontal=True)
+        st.divider()
+
+    inject_page_css(app_theme)
 
     st.title(APP_TITLE)
     st.caption(
@@ -792,7 +1671,6 @@ def main() -> None:
             index=0,
             horizontal=True,
         )
-        wrap = st.slider("Columns per block", min_value=30, max_value=120, value=70, step=10)
 
         st.divider()
         st.markdown(
@@ -811,35 +1689,74 @@ def main() -> None:
             )
         )
 
-    with st.form("alignment_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            raw_1 = st.text_area("Sequence 1", value=EXAMPLE_FULL, height=220)
-        with col2:
-            raw_2 = st.text_area("Sequence 2", value=EXAMPLE_FRAGMENT, height=220)
+    col1, col2 = st.columns(2)
+    with col1:
+        raw_1 = st.text_area("Sequence 1", value=EXAMPLE_FULL, height=220, key="sequence_1_input")
+    with col2:
+        raw_2 = st.text_area("Sequence 2", value=EXAMPLE_FRAGMENT, height=220, key="sequence_2_input")
 
-        submitted = st.form_submit_button("Align sequences", type="primary", use_container_width=True)
+    run_col, auto_col = st.columns([3, 1])
+    with auto_col:
+        auto_align = st.checkbox(
+            "Auto Align",
+            value=False,
+            help="Recalculate automatically whenever sequence text or settings change.",
+        )
+    with run_col:
+        submitted = st.button(
+            "Align sequences",
+            type="primary",
+            use_container_width=True,
+            disabled=auto_align,
+        )
+    if auto_align:
+        st.caption("Auto Align is on: sequence and scoring changes recalculate immediately.")
 
-    if not submitted:
+    should_align = auto_align or submitted
+
+    if should_align:
+        seq1_name, raw_seq1 = parse_fasta_or_sequence(raw_1, "Sequence 1")
+        seq2_name, raw_seq2 = parse_fasta_or_sequence(raw_2, "Sequence 2")
+        seq1, warnings_1 = normalize_protein_sequence(raw_seq1)
+        seq2, warnings_2 = normalize_protein_sequence(raw_seq2)
+
+        for message in warnings_1 + warnings_2:
+            st.warning(message)
+
+        if not seq1 or not seq2:
+            st.error("Both sequences must contain at least one amino-acid residue.")
+            st.stop()
+
+        with st.spinner("Aligning sequences..."):
+            result = run_alignment(seq1_name, seq2_name, seq1, seq2, algorithm, gap_open, gap_extend)
+            metrics = analyze_alignment(result)
+            notes = interpret(result, metrics)
+
+        st.session_state["alignment_payload"] = {
+            "result": result,
+            "metrics": metrics,
+            "notes": notes,
+            "seq1_name": seq1_name,
+            "seq2_name": seq2_name,
+            "seq1": seq1,
+            "seq2": seq2,
+            "gap_open": gap_open,
+            "gap_extend": gap_extend,
+        }
+    elif "alignment_payload" not in st.session_state:
         st.info("Paste FASTA or plain amino-acid sequences, choose settings, then run the alignment.")
         st.stop()
 
-    seq1_name, raw_seq1 = parse_fasta_or_sequence(raw_1, "Sequence 1")
-    seq2_name, raw_seq2 = parse_fasta_or_sequence(raw_2, "Sequence 2")
-    seq1, warnings_1 = normalize_protein_sequence(raw_seq1)
-    seq2, warnings_2 = normalize_protein_sequence(raw_seq2)
-
-    for message in warnings_1 + warnings_2:
-        st.warning(message)
-
-    if not seq1 or not seq2:
-        st.error("Both sequences must contain at least one amino-acid residue.")
-        st.stop()
-
-    with st.spinner("Aligning sequences..."):
-        result = run_alignment(seq1_name, seq2_name, seq1, seq2, algorithm, gap_open, gap_extend)
-        metrics = analyze_alignment(result)
-        notes = interpret(result, metrics)
+    payload = st.session_state["alignment_payload"]
+    result = payload["result"]
+    metrics = payload["metrics"]
+    notes = payload["notes"]
+    seq1_name = payload["seq1_name"]
+    seq2_name = payload["seq2_name"]
+    seq1 = payload["seq1"]
+    seq2 = payload["seq2"]
+    used_gap_open = payload["gap_open"]
+    used_gap_extend = payload["gap_extend"]
 
     metric_cols = st.columns(6)
     metric_cols[0].metric("Score", f"{result.score:.1f}")
@@ -854,11 +1771,10 @@ def main() -> None:
     )
 
     with tab_alignment:
-        viewer_height = min(900, max(360, (metrics.aligned_length // max(wrap, 1) + 1) * 150))
         components.html(
-            build_alignment_html(result, color_mode or "By alignment result", wrap),
-            height=viewer_height,
-            scrolling=True,
+            build_interactive_alignment_html(result, color_mode or "By alignment result", app_theme),
+            height=330,
+            scrolling=False,
         )
 
     with tab_metrics:
@@ -867,7 +1783,7 @@ def main() -> None:
             st.subheader("Alignment")
             st.write(f"Algorithm: **{result.algorithm}**")
             st.write("Substitution matrix: **BLOSUM62**")
-            st.write(f"Gap open / extension: **{gap_open} / {gap_extend}**")
+            st.write(f"Gap open / extension: **{used_gap_open} / {used_gap_extend}**")
             st.write(f"Aligned columns: **{metrics.aligned_length}**")
             st.write(f"Paired residue columns: **{metrics.paired_residues}**")
             st.write(f"Exact matches: **{metrics.exact_matches}**")
