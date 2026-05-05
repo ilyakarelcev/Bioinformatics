@@ -1,6 +1,6 @@
-European Molecular Biology Laboratory.
+﻿European Molecular Biology Laboratory.
 Большая европейская организация молекулярной биологии.
 
 
-# EMBL-EBI
+# [[EMBL-EBI]]
 European Bioinformatics Institute. Биоинформатическое подразделение EMBL.

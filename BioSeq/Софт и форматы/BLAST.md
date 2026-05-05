@@ -1,4 +1,4 @@
-
+﻿
 BLAST расшифровывается как **Basic Local Alignment Search Tool**.
 
 Это семейство инструментов для поиска похожих биологических последовательностей
@@ -13,16 +13,16 @@ BLAST расшифровывается как **Basic Local Alignment Search To
 2. Быстро найти такие же или похожие слова в базе.
 3. Расширить эти совпадения в обе стороны.
 4. Построить локальное выравнивание.
-5. Посчитать score, identity, coverage, gaps, E-value.
+5. Посчитать score, [[Sequence identity|identity]], coverage, gaps, [[E-value]].
 
-Это эвристический алгоритм: он не перебирает все возможные выравнивания идеально, как **Smith-Waterman**, зато работает намного быстрее на огромных базах.
+Это эвристический алгоритм: он не перебирает все возможные выравнивания идеально, как **[[Алгоритм Smith-Waterman|Smith-Waterman]]**, зато работает намного быстрее на огромных базах.
 
 BLAST — это не один алгоритм в бытовом смысле, а **семейство программ**:
 
 |Программа|Что сравнивает|
 |---|---|
-|blastn|ДНК против ДНК|
-|blastp|белок против белка|
+|blastn|[[ДНК]] против ДНК|
+|blastp|[[Белок]] против белка|
 |blastx|ДНК переводится в 6 рамках → белок против белковой базы|
 |tblastn|белок против ДНК-базы, переведенной в 6 рамках|
 |tblastx|ДНК против ДНК, обе стороны переводятся в белки|
@@ -30,12 +30,12 @@ BLAST — это не один алгоритм в бытовом смысле, 
 |DELTA-BLAST|использует домены для более чувствительного поиска|
 |MegaBLAST|быстрый blastn для очень похожих ДНК|
 
-NCBI официально описывает основные программы и API тут: [NCBI BLAST URL API](https://blast.ncbi.nlm.nih.gov/doc/blast-help/urlapi.html), [BLAST+ manual](https://www.ncbi.nlm.nih.gov/books/NBK569855/).
+[[NCBI]] официально описывает основные программы и API тут: [NCBI BLAST URL API](https://blast.ncbi.nlm.nih.gov/doc/blast-help/urlapi.html), [BLAST+ manual](https://www.ncbi.nlm.nih.gov/books/NBK569855/).
 
 BLAST — это скорее стандартный “молоток” биоинформатики.
 Есть:
 NCBI BLAST,
-UniProt BLAST,
+[[_UniProt|UniProt]] BLAST,
 Ensembl BLAST,
 FlyBase BLAST,
 локальный BLAST+ на компьютере/сервере,
