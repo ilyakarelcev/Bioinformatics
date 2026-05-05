@@ -816,56 +816,57 @@ def build_interactive_alignment_html(result: AlignmentResult, color_mode: str, a
     )
     is_dark = app_theme == "Dark"
     viewer_colors = {
-        "page_bg": "#080814" if is_dark else "#ffffff",
-        "panel_bg": "#111122" if is_dark else "#ffffff",
-        "panel_border": "#2c2a4a" if is_dark else "#d0d7de",
-        "text": "#f4f2ff" if is_dark else "#24292f",
-        "muted": "#a8a2cf" if is_dark else "#57606a",
-        "soft_border": "#282747" if is_dark else "#d8dee4",
-        "scale": "#8f89c6" if is_dark else "#57606a",
-        "tick": "#d7d2ff" if is_dark else "#24292f",
-        "track_bg": "#0b0b19" if is_dark else "#f6f8fa",
-        "track_border": "#302d55" if is_dark else "#d0d7de",
-        "viewport_bg": "rgba(124, 92, 255, 0.20)" if is_dark else "rgba(31, 136, 61, 0.14)",
-        "viewport_border": "rgba(164, 143, 255, 0.88)" if is_dark else "rgba(31, 136, 61, 0.66)",
-        "handle_bg": "rgba(20, 18, 42, 0.94)" if is_dark else "rgba(255, 255, 255, 0.9)",
-        "position": "#a8a2cf" if is_dark else "#57606a",
-        "connector": "#d7d2ff" if is_dark else "#57606a",
-        "hover": "#7c5cff" if is_dark else "#0969da",
-        "paired": "#2dd4bf" if is_dark else "#9a6700",
+        "page_bg": "#1a1b1e" if is_dark else "#f4f5f7",
+        "panel_bg": "#25262b" if is_dark else "#ffffff",
+        "panel_border": "#373a40" if is_dark else "#dce0e5",
+        "text": "#c1c2c5" if is_dark else "#2c2e33",
+        "muted": "#909296" if is_dark else "#868e96",
+        "soft_border": "#373a40" if is_dark else "#e9ecef",
+        "scale": "#5c5f66" if is_dark else "#adb5bd",
+        "tick": "#c1c2c5" if is_dark else "#495057",
+        "track_bg": "#141517" if is_dark else "#e9ecef",
+        "track_border": "#2c2e33" if is_dark else "#ced4da",
+        "viewport_bg": "rgba(107, 142, 191, 0.15)" if is_dark else "rgba(107, 142, 191, 0.1)",
+        "viewport_border": "rgba(107, 142, 191, 0.6)" if is_dark else "rgba(107, 142, 191, 0.4)",
+        "handle_bg": "rgba(44, 46, 51, 0.9)" if is_dark else "rgba(255, 255, 255, 0.9)",
+        "position": "#909296" if is_dark else "#868e96",
+        "connector": "#5c5f66" if is_dark else "#adb5bd",
+        "hover": "#84a5c6" if is_dark else "#6b8ebf",
+        "paired": "#6b8ebf" if is_dark else "#4b6c9b",
     }
     tile_colors = {
-        "exact_bg": "#7c5cff" if is_dark else "#34d058",
-        "exact_fg": "#f8f6ff" if is_dark else "#052e16",
-        "positive_bg": "#2dd4bf" if is_dark else "#8be9df",
-        "positive_fg": "#041f20" if is_dark else "#063b3b",
-        "weak_bg": "#f0abfc" if is_dark else "#ffd33d",
-        "weak_fg": "#321044" if is_dark else "#3b2300",
-        "mismatch_bg": "#26243d" if is_dark else "#eaeef2",
-        "mismatch_fg": "#d8d3ff" if is_dark else "#24292f",
-        "gap_bg": "#fb7185" if is_dark else "#ffebe9",
-        "gap_fg": "#2b0710" if is_dark else "#82071e",
-        "hydrophobic_bg": "#575174" if is_dark else "#d8dee4",
-        "hydrophobic_fg": "#f2efff" if is_dark else "#24292f",
-        "polar_bg": "#38bdf8" if is_dark else "#a5d6a7",
-        "polar_fg": "#061b2b" if is_dark else "#143d1a",
-        "positive_charge_bg": "#818cf8" if is_dark else "#79c0ff",
-        "positive_charge_fg": "#101342" if is_dark else "#05264c",
-        "negative_bg": "#f472b6" if is_dark else "#ffaba8",
-        "negative_fg": "#331023" if is_dark else "#5f0f0b",
-        "aromatic_bg": "#c084fc" if is_dark else "#d2a8ff",
-        "aromatic_fg": "#25103f" if is_dark else "#3b0f70",
-        "special_bg": "#fbbf24" if is_dark else "#ffdf8b",
-        "special_fg": "#2e1b00" if is_dark else "#442900",
-        "ambiguous_bg": "#4b4868" if is_dark else "#d0d7de",
-        "ambiguous_fg": "#ebe7ff" if is_dark else "#24292f",
+        "exact_bg": "#51cf66" if is_dark else "#40c057",
+        "exact_fg": "#092b11" if is_dark else "#ffffff",
+        "positive_bg": "#a9e34b" if is_dark else "#82c91e",
+        "positive_fg": "#143306" if is_dark else "#ffffff",
+        "weak_bg": "#ffa94d" if is_dark else "#fd7e14",
+        "weak_fg": "#401b01" if is_dark else "#ffffff",
+        "mismatch_bg": "#ff6b6b" if is_dark else "#fa5252",
+        "mismatch_fg": "#380a0a" if is_dark else "#ffffff",
+        "gap_bg": "#495057" if is_dark else "#ced4da",
+        "gap_fg": "#f8f9fa" if is_dark else "#495057",
+        "hydrophobic_bg": "#a5b4fc" if is_dark else "#c7d2fe",
+        "hydrophobic_fg": "#1e3a8a" if is_dark else "#1e3a8a",
+        "polar_bg": "#86efac" if is_dark else "#bbf7d0",
+        "polar_fg": "#14532d" if is_dark else "#14532d",
+        "positive_charge_bg": "#93c5fd" if is_dark else "#bfdbfe",
+        "positive_charge_fg": "#1e3a8a" if is_dark else "#1e3a8a",
+        "negative_bg": "#fca5a5" if is_dark else "#fecaca",
+        "negative_fg": "#7f1d1d" if is_dark else "#7f1d1d",
+        "aromatic_bg": "#d8b4fe" if is_dark else "#e9d5ff",
+        "aromatic_fg": "#581c87" if is_dark else "#581c87",
+        "special_bg": "#fde047" if is_dark else "#fef08a",
+        "special_fg": "#713f12" if is_dark else "#713f12",
+        "ambiguous_bg": "#e5e7eb" if is_dark else "#f3f4f6",
+        "ambiguous_fg": "#374151" if is_dark else "#374151",
     }
 
     return f"""
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
       body {{
         margin: 0;
-        font-family: Inter, Segoe UI, Arial, sans-serif;
+        font-family: 'Inter', sans-serif;
         background: {viewer_colors["page_bg"]};
         color: {viewer_colors["text"]};
       }}
@@ -1497,32 +1498,33 @@ def make_report(result: AlignmentResult, metrics: AlignmentMetrics, notes: list[
 def inject_page_css(app_theme: str) -> None:
     is_dark = app_theme == "Dark"
     colors = {
-        "app_bg": (
-            "radial-gradient(circle at 18% -8%, rgba(124, 92, 255, 0.22) 0%, rgba(8, 8, 20, 0) 38%), linear-gradient(180deg, #080814 0%, #05050d 100%)"
-            if is_dark
-            else "linear-gradient(180deg, #f6f8fa 0%, #ffffff 42%)"
-        ),
-        "panel_bg": "#111122" if is_dark else "#ffffff",
-        "panel_bg_soft": "#0b0b19" if is_dark else "#f6f8fa",
-        "panel_border": "#2c2a4a" if is_dark else "#d0d7de",
-        "metric_label": "#a8a2cf" if is_dark else "#57606a",
-        "metric_value": "#f4f2ff" if is_dark else "#24292f",
-        "text": "#f4f2ff" if is_dark else "#24292f",
-        "muted": "#a8a2cf" if is_dark else "#57606a",
-        "textarea_bg": "#0b0b19" if is_dark else "#ffffff",
-        "textarea_border": "#343056" if is_dark else "#8c959f",
-        "textarea_focus": "#8b5cf6" if is_dark else "#1f883d",
-        "button_bg": "#7c5cff" if is_dark else "#1f883d",
-        "button_hover": "#8b7cff" if is_dark else "#1a7f37",
-        "button_text": "#ffffff",
-        "tab_active": "#a78bfa" if is_dark else "#1f883d",
-        "code_bg": "#0b0b19" if is_dark else "#f6f8fa",
+        "app_bg": "#1a1b1e" if is_dark else "#f8f9fa",
+        "panel_bg": "#25262b" if is_dark else "#ffffff",
+        "panel_bg_soft": "#141517" if is_dark else "#f1f3f5",
+        "panel_border": "#373a40" if is_dark else "#dee2e6",
+        "metric_label": "#909296" if is_dark else "#868e96",
+        "metric_value": "#c1c2c5" if is_dark else "#212529",
+        "text": "#c1c2c5" if is_dark else "#212529",
+        "muted": "#909296" if is_dark else "#868e96",
+        "textarea_bg": "#141517" if is_dark else "#ffffff",
+        "textarea_border": "#373a40" if is_dark else "#ced4da",
+        "textarea_focus": "#6b8ebf" if is_dark else "#6b8ebf",
+        "button_bg": "#373a40" if is_dark else "#e9ecef",
+        "button_hover": "#42464d" if is_dark else "#dee2e6",
+        "button_text": "#c1c2c5" if is_dark else "#495057",
+        "tab_active": "#6b8ebf" if is_dark else "#4b6c9b",
+        "code_bg": "#141517" if is_dark else "#f1f3f5",
     }
     st.markdown(
         f"""
         <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+          
+          html, body, [class*="css"], .stApp {{
+            font-family: 'Inter', sans-serif !important;
+          }}
           .stApp {{
-            background: {colors["app_bg"]};
+            background: {colors["app_bg"]} !important;
             color: {colors["text"]};
           }}
           .stApp, .stApp p, .stApp span, .stApp label {{
@@ -1563,11 +1565,15 @@ def inject_page_css(app_theme: str) -> None:
             border-color: {colors["textarea_focus"]} !important;
             box-shadow: 0 0 0 1px {colors["textarea_focus"]} !important;
           }}
-          input, div[data-baseweb="input"] input {{
+          input, 
+          div[data-baseweb="input"], 
+          div[data-baseweb="input"] input, 
+          div[data-baseweb="base-input"],
+          [data-testid="stNumberInputContainer"] {{
+            background-color: {colors["textarea_bg"]} !important;
             color: {colors["text"]} !important;
           }}
           div[data-baseweb="input"] {{
-            background: {colors["textarea_bg"]} !important;
             border-color: {colors["textarea_border"]} !important;
           }}
           .stButton > button,

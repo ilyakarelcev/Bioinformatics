@@ -105,6 +105,146 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Outfit', sans-serif !important;
+}
+
+/* App background gradient */
+.stApp {
+    background: radial-gradient(circle at top left, #1f1816 0%, #0d0b0a 100%) !important;
+}
+
+/* Stylish headers */
+h1, h2, h3 {
+    color: #f05b32 !important;
+    text-shadow: 0 0 15px rgba(240, 91, 50, 0.2);
+    font-weight: 700 !important;
+    letter-spacing: -0.5px;
+}
+
+/* Metric styling */
+[data-testid="stMetricValue"] {
+    color: #ff8c42 !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 10px rgba(255, 140, 66, 0.3);
+}
+[data-testid="stMetricLabel"] {
+    color: #c7b8b2 !important;
+    font-weight: 600 !important;
+}
+
+/* Primary buttons */
+button[data-testid="baseButton-primary"] {
+    background: linear-gradient(135deg, #f05b32 0%, #d43b11 100%) !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(240, 91, 50, 0.3) !important;
+    transition: all 0.3s ease !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+button[data-testid="baseButton-primary"]:hover {
+    box-shadow: 0 6px 20px rgba(240, 91, 50, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+/* Secondary buttons */
+button[data-testid="baseButton-secondary"] {
+    border: 1px solid rgba(240, 91, 50, 0.4) !important;
+    color: #ff8c42 !important;
+    transition: all 0.3s ease !important;
+    background: rgba(26, 22, 20, 0.6) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+button[data-testid="baseButton-secondary"]:hover {
+    border: 1px solid #f05b32 !important;
+    box-shadow: 0 0 15px rgba(240, 91, 50, 0.2) !important;
+    color: #f05b32 !important;
+}
+
+/* Borders and containers */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border: 1px solid rgba(255, 140, 66, 0.15) !important;
+    border-radius: 16px !important;
+    background: rgba(41, 36, 33, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Input fields */
+.stTextInput>div>div>input, .stTextArea>div>div>textarea {
+    background-color: rgba(13, 11, 10, 0.5) !important;
+    border: 1px solid rgba(240, 91, 50, 0.3) !important;
+    color: #f4f0ec !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+.stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
+    border: 1px solid #f05b32 !important;
+    box-shadow: 0 0 10px rgba(240, 91, 50, 0.2) !important;
+}
+
+/* Tabs */
+[data-testid="stTabs"] button {
+    font-weight: 600 !important;
+    font-size: 1.05rem !important;
+    color: #c7b8b2 !important;
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
+    color: #f05b32 !important;
+}
+[data-testid="stTabs"] button[aria-selected="true"] > div[data-testid="stMarkdownContainer"] > p {
+    color: #f05b32 !important;
+}
+
+/* Code blocks */
+.stCodeBlock {
+    border: 1px solid rgba(255, 140, 66, 0.15) !important;
+    border-radius: 8px !important;
+    background: #110e0c !important;
+}
+
+/* Selectbox */
+[data-testid="stSelectbox"] > div > div {
+    background-color: rgba(13, 11, 10, 0.5) !important;
+    border: 1px solid rgba(240, 91, 50, 0.3) !important;
+    border-radius: 8px !important;
+}
+[data-testid="stSelectbox"] > div > div:focus-within {
+    border: 1px solid #f05b32 !important;
+    box-shadow: 0 0 10px rgba(240, 91, 50, 0.2) !important;
+}
+
+/* Multiselect */
+[data-testid="stMultiSelect"] > div > div {
+    background-color: rgba(13, 11, 10, 0.5) !important;
+    border: 1px solid rgba(240, 91, 50, 0.3) !important;
+    border-radius: 8px !important;
+}
+[data-testid="stMultiSelect"] > div > div:focus-within {
+    border: 1px solid #f05b32 !important;
+    box-shadow: 0 0 10px rgba(240, 91, 50, 0.2) !important;
+}
+
+/* Sliders */
+.stSlider div[data-testid="stTickBar"] > div {
+    background-color: #f05b32 !important;
+}
+
+/* Expander headers */
+.streamlit-expanderHeader {
+    font-weight: 600 !important;
+    color: #f05b32 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 
 @st.cache_data(ttl=60 * 30, show_spinner=False)
 def get_text(url: str, params: dict[str, str] | None = None) -> str:
