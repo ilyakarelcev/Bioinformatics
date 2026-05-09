@@ -1,0 +1,80 @@
+/* Wide page only for notes with cssclasses: wide-page */
+
+.markdown-preview-view.wide-page,
+.markdown-rendered.wide-page,
+.markdown-source-view.mod-cm6.wide-page,
+.wide-page .markdown-preview-view,
+.wide-page .markdown-rendered,
+.wide-page .markdown-source-view.mod-cm6 {
+  --wide-page-readable-width: 700px;
+  --file-line-width: 100% !important;
+  --line-width: 100% !important;
+}
+
+.markdown-preview-view.wide-page .markdown-preview-sizer,
+.markdown-preview-view.wide-page .markdown-preview-section,
+.markdown-rendered.wide-page .markdown-preview-sizer,
+.markdown-rendered.wide-page .markdown-preview-section,
+.markdown-source-view.mod-cm6.wide-page .cm-sizer,
+.markdown-source-view.mod-cm6.wide-page .cm-content,
+.markdown-source-view.mod-cm6.wide-page .cm-contentContainer,
+.wide-page .markdown-preview-sizer,
+.wide-page .markdown-preview-section,
+.wide-page .cm-sizer,
+.wide-page .cm-content,
+.wide-page .cm-contentContainer {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.markdown-preview-view.wide-page .markdown-preview-sizer,
+.markdown-rendered.wide-page .markdown-preview-sizer,
+.markdown-source-view.mod-cm6.wide-page .cm-sizer,
+.wide-page .markdown-preview-sizer,
+.wide-page .cm-sizer {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.markdown-preview-view.wide-page table,
+.markdown-rendered.wide-page table,
+.markdown-source-view.mod-cm6.wide-page table,
+.wide-page table {
+  display: table;
+  table-layout: auto;
+  width: 100% !important;
+}
+
+/* Keep normal note content in the usual centered reading column. */
+.markdown-preview-view.wide-page .markdown-preview-section > :not(.el-table):not(.table-wrapper),
+.markdown-rendered.wide-page .markdown-preview-section > :not(.el-table):not(.table-wrapper),
+.wide-page .markdown-preview-section > :not(.el-table):not(.table-wrapper) {
+  max-width: var(--wide-page-readable-width) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Let table blocks escape that centered reading column. */
+.markdown-preview-view.wide-page .markdown-preview-section > .el-table,
+.markdown-preview-view.wide-page .markdown-preview-section > .table-wrapper,
+.markdown-rendered.wide-page .markdown-preview-section > .el-table,
+.markdown-rendered.wide-page .markdown-preview-section > .table-wrapper,
+.wide-page .markdown-preview-section > .el-table,
+.wide-page .markdown-preview-section > .table-wrapper {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* In Live Preview, keep ordinary lines centered but allow markdown tables to span wide. */
+.markdown-source-view.mod-cm6.wide-page .cm-content > .cm-line:not(.HyperMD-table-row),
+.wide-page .markdown-source-view.mod-cm6 .cm-content > .cm-line:not(.HyperMD-table-row) {
+  max-width: var(--wide-page-readable-width) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.markdown-source-view.mod-cm6.wide-page .cm-content > .HyperMD-table-row,
+.wide-page .markdown-source-view.mod-cm6 .cm-content > .HyperMD-table-row {
+  max-width: none !important;
+  width: 100% !important;
+}

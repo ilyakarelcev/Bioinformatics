@@ -115,6 +115,38 @@ EXAMPLE_FRAGMENT = (
     "MALWTRLLPLLALLALWAPAPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREAEN"
     "PQAGAVELGGGLGGLQALALEGPPQKRGIVEQCCTSICSLYQLENYCN"
 )
+TEST_FASTA_OPTIONS = (
+    ">1\n"
+    "MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAED"
+    "LQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN",
+    ">2\n"
+    "MALWTRLRPLLALLALWPPPPARAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREVEG"
+    "PQVGALELAGGPGAGGLEGPPQKRGIVEQCCASVCSLYQLENYCN",
+    ">3\n"
+    "MALWTRLLPLLALLALWAPAPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREAEN"
+    "PQAGAVELGGGLGGLQALALEGPPQKRGIVEQCCTSICSLYQLENYCN",
+    ">4\n"
+    "MALWTRLLPLLALLALLGPDPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKSRREVEE"
+    "QQGGQVELGGGPGAGLPQPLALEMALQKRGIVEQCCTSICSLYQLENYCN",
+    ">5\n"
+    "MALWMRLLPLLALLALWAPAPTRAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREVED"
+    "LQVRDVELAGAPGEGGLQPLALEGALQKRGIVEQCCTSICSLYQLENYCN",
+    ">6\n"
+    "MALWMHLLTVLALLALWGPNTGQAFVSRHLCGSNLVETLYSVCQDDGFFYIPKDRRELED"
+    "PQVEQTELGMGLGAGGLQPLALEMALQKRGIVDQCCTGTCTRHQLQSYCN",
+    ">7\n"
+    "MAPWMHLLTVLALLALWGPNSVQAYSSQHLCGSNLVEALYMTCGRSGFYRPHDRRELEDL"
+    "QVEQAELGLEAGGLQPSALEMILQKRGIVDQCCNNICTFNQLQNYCNVP",
+    ">8\n"
+    "MTLWMRLLPLLTLLVLWEPNPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKSRRGVED"
+    "PQVAQLELGGGPGADDLQTLALEVAQQKRGIVDQCCTSICSLYQLENYCN",
+    ">9\n"
+    "MASLAALLPLLALLVLCRLDPAQAFVNQHLCGSHLVEALYLVCGERGFFYTPKSRREVEE"
+    "LQVGQAELGGGPGAGGLQPSALELALQKRGIVEQCCTSICSLYQLENYCN",
+    ">10\n"
+    "MALWTRLVPLLALLALWAPAPAHAFVNQHLCGSHLVEALYLVCGERGFFYTPKARREVEG"
+    "PQVGALELAGGPGAGGLEGPPQKRGIVEQCCAGVCSLYQLENYCN",
+)
 
 
 @dataclass(frozen=True)
@@ -196,6 +228,32 @@ def normalize_protein_sequence(sequence: str) -> tuple[str, list[str]]:
         )
 
     return "".join(normalized), warnings_out
+
+
+def initialize_sequence_sample_state() -> None:
+    defaults = {
+        "sequence_1_sample_index": 0,
+        "sequence_2_sample_index": 1,
+    }
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+
+    st.session_state.setdefault(
+        "sequence_1_input",
+        TEST_FASTA_OPTIONS[st.session_state["sequence_1_sample_index"]],
+    )
+    st.session_state.setdefault(
+        "sequence_2_input",
+        TEST_FASTA_OPTIONS[st.session_state["sequence_2_sample_index"]],
+    )
+
+
+def advance_sequence_sample(sequence_number: int) -> None:
+    index_key = f"sequence_{sequence_number}_sample_index"
+    input_key = f"sequence_{sequence_number}_input"
+    next_index = (st.session_state.get(index_key, 0) + 1) % len(TEST_FASTA_OPTIONS)
+    st.session_state[index_key] = next_index
+    st.session_state[input_key] = TEST_FASTA_OPTIONS[next_index]
 
 
 @st.cache_resource(show_spinner=False)
@@ -1695,11 +1753,53 @@ def main() -> None:
             )
         )
 
+    initialize_sequence_sample_state()
+
     col1, col2 = st.columns(2)
     with col1:
-        raw_1 = st.text_area("Sequence 1", value=EXAMPLE_FULL, height=220, key="sequence_1_input")
+        label_col, sample_col, next_col = st.columns([1, 0.35, 0.35])
+        with label_col:
+            st.markdown("**Sequence 1**")
+        with sample_col:
+            st.caption(
+                f"{st.session_state['sequence_1_sample_index'] + 1}/{len(TEST_FASTA_OPTIONS)}"
+            )
+        with next_col:
+            st.button(
+                "Next",
+                key="sequence_1_next",
+                on_click=advance_sequence_sample,
+                args=(1,),
+                use_container_width=True,
+            )
+        raw_1 = st.text_area(
+            "Sequence 1",
+            height=220,
+            key="sequence_1_input",
+            label_visibility="collapsed",
+        )
     with col2:
-        raw_2 = st.text_area("Sequence 2", value=EXAMPLE_FRAGMENT, height=220, key="sequence_2_input")
+        label_col, sample_col, next_col = st.columns([1, 0.35, 0.35])
+        with label_col:
+            st.markdown("**Sequence 2**")
+        with sample_col:
+            st.caption(
+                f"{st.session_state['sequence_2_sample_index'] + 1}/{len(TEST_FASTA_OPTIONS)}"
+            )
+        with next_col:
+            st.button(
+                "Next",
+                key="sequence_2_next",
+                on_click=advance_sequence_sample,
+                args=(2,),
+                use_container_width=True,
+            )
+        raw_2 = st.text_area(
+            "Sequence 2",
+            height=220,
+            key="sequence_2_input",
+            label_visibility="collapsed",
+        )
 
     run_col, auto_col = st.columns([3, 1])
     with auto_col:
