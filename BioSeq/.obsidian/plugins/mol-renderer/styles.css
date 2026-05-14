@@ -1,0 +1,51 @@
+.mol-renderer {
+  margin: 0.75rem 0;
+  color: var(--text-normal);
+}
+
+.mol-renderer__figure {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  overflow-x: auto;
+}
+
+.mol-renderer svg {
+  display: block;
+  max-width: min(100%, 760px);
+  height: auto;
+}
+
+.mol-renderer__bond {
+  stroke: var(--text-normal);
+  stroke-linecap: round;
+}
+
+.mol-renderer__atom-bg {
+  fill: var(--background-primary);
+  stroke: var(--background-primary);
+  stroke-width: 6;
+  stroke-linejoin: round;
+}
+
+.mol-renderer__atom-label {
+  font-family: var(--font-text), Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  dominant-baseline: central;
+  text-anchor: middle;
+}
+
+.mol-renderer__error {
+  padding: 10px 12px;
+  border: 1px solid var(--background-modifier-error);
+  border-radius: 8px;
+  color: var(--text-error);
+  background: var(--background-modifier-error-hover);
+  font-family: var(--font-monospace);
+  white-space: pre-wrap;
+}

@@ -1,0 +1,9 @@
+{
+  "id": "mol-renderer",
+  "name": "MOL Renderer",
+  "version": "0.1.0",
+  "minAppVersion": "0.15.0",
+  "description": "Renders MDL molfile code blocks as inline SVG molecular diagrams.",
+  "author": "BioSeq",
+  "isDesktopOnly": false
+}

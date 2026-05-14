@@ -3,10 +3,3 @@
 # EMBL-EBI
 
 EMBL-EBI = European Bioinformatics Institute, биоинформатическое подразделение [[EMBL]].
-
-## Связано
-
-- [[EMBL]]
-- [[ENA]]
-- [[AlphaFold DB]]
-

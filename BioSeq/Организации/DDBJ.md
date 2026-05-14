@@ -3,10 +3,3 @@
 # DDBJ
 
 DDBJ = DNA Data Bank of Japan. Это японский архив нуклеотидных последовательностей, входящий в [[INSDC]] вместе с [[GenBank]] и [[ENA]].
-
-## Связано
-
-- [[INSDC]]
-- [[GenBank]]
-- [[ENA]]
-

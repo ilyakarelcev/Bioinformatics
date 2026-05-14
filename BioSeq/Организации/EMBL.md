@@ -1,4 +1,4 @@
-﻿European Molecular Biology Laboratory.
+European Molecular Biology Laboratory.
 Большая европейская организация молекулярной биологии.
 
 

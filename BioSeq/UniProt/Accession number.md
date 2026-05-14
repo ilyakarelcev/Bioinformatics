@@ -3,10 +3,3 @@
 # Accession number
 
 Accession number — стабильный идентификатор записи в базе. Например, у человеческого инсулина в UniProt это `P01308`.
-
-## Связано
-
-- [[_UniProt|UniProt]]
-- [[FASTA]]
-- [[Инсулин человека. FASTA]]
-

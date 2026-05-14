@@ -1,5 +1,5 @@
 {
   "alwaysUpdateLinks": true,
   "attachmentFolderPath": "_assets",
-  "readableLineLength": true
+  "readableLineLength": false
 }

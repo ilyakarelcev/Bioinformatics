@@ -1,8 +1,0 @@
-{
-	"nodes":[
-		{"id":"09352b1b2c128cff","type":"text","text":"Белок","x":-250,"y":-260,"width":250,"height":60},
-		{"id":"e8a917e1a8155877","type":"text","text":"Белок — это аминокислоты, обычно 20 стандартных букв:","x":-260,"y":-140,"width":250,"height":100},
-		{"id":"467b26a35debb55d","type":"text","text":"```\nA R N D C Q E G H I L K M F P S T W Y V\n```","x":-320,"y":0,"width":420,"height":50}
-	],
-	"edges":[]
-}

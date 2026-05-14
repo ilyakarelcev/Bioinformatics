@@ -8,63 +8,88 @@
         "type": "tabs",
         "children": [
           {
+            "id": "6896d877e683cde3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "______Примеры белков.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "______Примеры белков"
+            }
+          },
+          {
+            "id": "5b6c9ffe70853576",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Аминокислоты/Лейцин.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Лейцин"
+            }
+          },
+          {
             "id": "f07831c9a126bc81",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Гемоглобин.md",
+                "file": "Базовые понятия/Аминокислота.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Гемоглобин"
+              "title": "Аминокислота"
             }
           },
           {
-            "id": "00f04ae6b16770e9",
+            "id": "a8cececc5af744f1",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "______Примеры белков.md",
+                "file": "Базовые понятия/Аминокислота.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "______Примеры белков"
+              "title": "Аминокислота"
             }
           },
           {
-            "id": "f163f7c131535eb9",
+            "id": "5e828760cb705497",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "______Примеры белков.md",
+                "file": "Метильная группа.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "______Примеры белков"
+              "title": "Метильная группа"
             }
           },
           {
-            "id": "7bcb1073b2df7d8d",
+            "id": "a39103defe5cf30b",
             "type": "leaf",
+            "pinned": true,
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "UniProt Поиск.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "UniProt Поиск"
+              "type": "graph",
+              "state": {},
+              "pinned": true,
+              "icon": "lucide-git-fork",
+              "title": "Граф"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -117,11 +142,12 @@
               "title": "Закладки"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
-    "width": 367.5
+    "width": 305.5
   },
   "right": {
     "id": "f3e573d61eaab34b",
@@ -223,58 +249,60 @@
       "daily-notes:Сегодняшняя заметка": false,
       "templates:Вставить шаблон": false,
       "command-palette:Открыть палитру команд": false,
-      "bases:Создать новую базу": false
+      "bases:Создать новую базу": false,
+      "ketcher:Create new structure": false
     }
   },
-  "active": "f163f7c131535eb9",
+  "active": "6896d877e683cde3",
   "lastOpenFiles": [
-    "______Идеи что улучшить.md",
-    "Базы данных.md",
+    "Похожесть белков/Что делал Милош.md",
+    "Софт и форматы/T5.md",
+    "Белок.md",
+    "Без названия",
+    "Аминокислоты/Аспарагиновая кислота.md",
+    "Базовые понятия/Аминокислота.md",
     "______Примеры белков.md",
-    "Коллаген.md",
-    "UniProt Поиск.md",
-    "Гемоглобин.md",
-    "_____Запуск проекта.md",
-    "Wet-Lab/PCR.md",
-    "Изолейцин и лейцин..md",
-    "Софт и форматы/BLAST.md",
-    "Паралоги.md",
-    "E-Threshold (E-value).md",
-    "_assets/Pasted image 20260508202526.png",
-    "Инсулин человека. FASTA.md",
-    "Похожесть белков/HNSW индекс.md",
-    "Похожесть белков/_Похожесть белков.md",
-    "Софт и форматы/FAISS.md",
-    "00 Карты/Поиск и выравнивание.md",
+    "Молекулы.md",
     "Как загрузить ключ от Gemini на Cloudflare.md",
+    "Аминокислоты/Аспарагин.md",
+    "Аминокислоты/Аланин.md",
+    "Метильная группа.md",
+    "Аминокислоты/Глицин.md",
+    "Аминокислоты/Лейцин.md",
+    "_assets/Pasted image 20260511031305.png",
+    "Аминокислоты/Изолейцин.md",
+    "Аминокислоты/Валин.md",
+    "Аминокислоты/Аргинин.md",
+    "MDL Molfile.md",
+    "Ketcher/Ketcher 5-11-2026 01.15.11.ket",
+    "Ketcher",
+    "_assets/Pasted image 20260510185555.png",
+    "_assets/Pasted image 20260510185436.png",
+    "Аминокислоты/Метионин.md",
+    "Аминокислоты/Гистидин.md",
+    "_____Запуск проекта.md",
+    "_assets/Pasted image 20260505033738.png",
+    "Аминокислоты/Тирозин.md",
+    "Аминокислоты/Триптофан.md",
+    "Аминокислоты/Треонин.md",
+    "Аминокислоты/Серин.md",
+    "Аминокислоты/Пролин.md",
+    "Аминокислоты/Фенилаланин.md",
+    "Аминокислоты",
+    "Без названия.base",
+    "MainCanvas.canvas",
+    "_assets/Pasted image 20260508202526.png",
     "_assets/Pasted image 20260508035120.png",
     "_assets/Pasted image 20260508032414.png",
     "_assets/Pasted image 20260508032255.png",
     "_assets/Pasted image 20260508032234.png",
-    "h5.md",
-    "RAG.md",
-    "Neo4j.md",
-    "Без названия.base",
-    "00 Карты/Базы данных и организации.md",
-    "Похожесть белков/Выравнивание аминокислотных последовательностей.md",
-    "Похожесть белков/Алгоритм Smith-Waterman.md",
-    "Похожесть белков/Алгоритм Нидалмана-Вунша.md",
-    "00 Карты/Главная карта BioSeq.md",
     "Pasted image 20260505041951.png",
-    "Pasted image 20260505040655.png",
-    "Pasted image 20260505034238.png",
-    "Pasted image 20260505034114.png",
-    "Pasted image 20260505033738.png",
     "Похожесть белков",
     "Без названия 1.canvas",
     "Без названия.canvas",
     "Поиск",
-    "MainCanvas.canvas",
     "Структура DNA",
     "Wet-Lab",
-    "Софт и форматы",
-    "Организации",
-    "Swiss-Prot",
-    "UniProt"
+    "Софт и форматы"
   ]
 }
